@@ -45,7 +45,7 @@ local function debounce(lfn, duration)
             vim.defer_fn(function()
                 set_buf_var(buf, "queued", false)
                 lfn(buf)
-            end, duration)
+            end, cnf.opts.debounce_delay)
             set_buf_var(buf, "queued", true)
         end
     end
