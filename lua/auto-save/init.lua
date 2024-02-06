@@ -10,7 +10,6 @@ local g = vim.g
 local fn = vim.fn
 local cmd = vim.cmd
 local o = vim.o
-local AUTO_SAVE_COLOR = "MsgArea"
 local BLACK = "#000000"
 local WHITE = "#ffffff"
 
@@ -39,6 +38,7 @@ local function get_buf_var(buf, name)
 end
 
 local function debounce(lfn, duration)
+    vim.print(duration)
     local function inner_debounce()
         local buf = api.nvim_get_current_buf()
         if not get_buf_var(buf, "queued") then
@@ -52,6 +52,7 @@ local function debounce(lfn, duration)
 
     return inner_debounce
 end
+
 
 function M.save(buf)
     buf = buf or api.nvim_get_current_buf()
@@ -82,12 +83,14 @@ function M.save(buf)
 
     callback("after_saving")
 
+    vim.print("333")
+    api.nvim_echo({ { ("222") } }, true, {})
     api.nvim_echo(
         {
             {
                 (
                     type(cnf.opts.execution_message.message) == "function"
-                        and cnf.opts.execution_message.message()
+                    and cnf.opts.execution_message.message()
                     or cnf.opts.execution_message.message
                 ),
                 AUTO_SAVE_COLOR,
@@ -105,7 +108,7 @@ function M.save(buf)
         {
             (
                 type(cnf.opts.execution_message.message) == "function"
-                    and cnf.opts.execution_message.message()
+                and cnf.opts.execution_message.message()
                 or cnf.opts.execution_message.message
             ),
             AUTO_SAVE_COLOR,
@@ -131,39 +134,6 @@ function M.on()
     api.nvim_create_autocmd(cnf.opts.trigger_events, {
         callback = function()
             perform_save()
-        end,
-        pattern = "*",
-        group = "AutoSave",
-    })
-
-    api.nvim_create_autocmd({ "VimEnter", "ColorScheme", "UIEnter" }, {
-        callback = function()
-            vim.schedule(function()
-                if cnf.opts.execution_message.dim > 0 then
-                    MSG_AREA = colors.get_hl("MsgArea")
-                    if MSG_AREA.foreground ~= nil then
-                        MSG_AREA.background = (
-                            MSG_AREA.background or colors.get_hl("Normal")["background"]
-                        )
-                        local foreground = (
-                            o.background == "dark"
-                                and colors.darken(
-                                    (MSG_AREA.background or BLACK),
-                                    cnf.opts.execution_message.dim,
-                                    MSG_AREA.foreground or BLACK
-                                )
-                            or colors.lighten(
-                                (MSG_AREA.background or WHITE),
-                                cnf.opts.execution_message.dim,
-                                MSG_AREA.foreground or WHITE
-                            )
-                        )
-
-                        colors.highlight("AutoSaveText", { fg = foreground })
-                        AUTO_SAVE_COLOR = "AutoSaveText"
-                    end
-                end
-            end)
         end,
         pattern = "*",
         group = "AutoSave",
