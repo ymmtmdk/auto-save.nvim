@@ -24,6 +24,7 @@ local function debounce(lfn)
     queued = queued + 1
 end
 
+
 local function echo(msg)
     api.nvim_echo(
         { { (msg), AUTO_SAVE_COLOR, }, },
@@ -32,10 +33,21 @@ local function echo(msg)
     )
 end
 
+local function condition(buf)
+    local fn = vim.fn
+    local utils = require("auto-save.utils.data")
+
+    if fn.getbufvar(buf, "&modifiable") == 1 and
+        utils.not_in(fn.getbufvar(buf, "&filetype"), {}) then
+        return true -- met condition(s), can save
+    end
+    return false    -- can't save
+end
+
 function M.save(buf)
     buf = buf or api.nvim_get_current_buf()
 
-    if cnf.opts.condition(buf) == false then
+    if condition(buf) == false then
         return
     end
 
