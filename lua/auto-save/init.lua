@@ -1,17 +1,11 @@
 local M = {}
 
 local cnf = require("auto-save.config")
-local callback = require("auto-save.utils.data").do_callback
-local colors = require("auto-save.utils.colors")
-local echo = require("auto-save.utils.echo")
 local autosave_running
 local api = vim.api
-local g = vim.g
 local fn = vim.fn
 local cmd = vim.cmd
-local o = vim.o
-local BLACK = "#000000"
-local WHITE = "#ffffff"
+local AUTO_SAVE_COLOR = "MsgArea"
 
 api.nvim_create_augroup("AutoSave", {
     clear = true,
@@ -29,6 +23,11 @@ local function set_buf_var(buf, name, value)
     end
 end
 
+
+
+
+
+
 local function get_buf_var(buf, name)
     if buf == nil then
         return global_vars[name]
@@ -38,7 +37,6 @@ local function get_buf_var(buf, name)
 end
 
 local function debounce(lfn, duration)
-    vim.print(duration)
     local function inner_debounce()
         local buf = api.nvim_get_current_buf()
         if not get_buf_var(buf, "queued") then
@@ -53,23 +51,22 @@ local function debounce(lfn, duration)
     return inner_debounce
 end
 
+local function echo(msg)
+    api.nvim_echo(
+        { { (msg), AUTO_SAVE_COLOR, }, },
+        true,
+        {}
+    )
+end
 
 function M.save(buf)
     buf = buf or api.nvim_get_current_buf()
-
-    callback("before_asserting_save")
 
     if cnf.opts.condition(buf) == false then
         return
     end
 
     if not api.nvim_buf_get_option(buf, "modified") then
-        return
-    end
-
-    callback("before_saving")
-
-    if g.auto_save_abort == true then
         return
     end
 
@@ -81,39 +78,11 @@ function M.save(buf)
         end)
     end
 
-    callback("after_saving")
-
-    vim.print("333")
-    api.nvim_echo({ { ("222") } }, true, {})
-    api.nvim_echo(
-        {
-            {
-                (
-                    type(cnf.opts.execution_message.message) == "function"
-                    and cnf.opts.execution_message.message()
-                    or cnf.opts.execution_message.message
-                ),
-                AUTO_SAVE_COLOR,
-            },
-        },
-        true,
-        {}
+    echo(
+        type(cnf.opts.execution_message.message) == "function"
+        and cnf.opts.execution_message.message()
+        or cnf.opts.execution_message.message
     )
-    if cnf.opts.execution_message.cleaning_interval > 0 then
-        fn.timer_start(cnf.opts.execution_message.cleaning_interval, function()
-            cmd([[echon '']])
-        end)
-    end
-    api.nvim_echo({
-        {
-            (
-                type(cnf.opts.execution_message.message) == "function"
-                and cnf.opts.execution_message.message()
-                or cnf.opts.execution_message.message
-            ),
-            AUTO_SAVE_COLOR,
-        },
-    }, true, {})
     if cnf.opts.execution_message.cleaning_interval > 0 then
         fn.timer_start(cnf.opts.execution_message.cleaning_interval, function()
             cmd([[echon '']])
@@ -121,13 +90,29 @@ function M.save(buf)
     end
 end
 
-local save_func = (
-    cnf.opts.debounce_delay > 0 and debounce(M.save, cnf.opts.debounce_delay) or M.save
-)
-
 local function perform_save()
-    g.auto_save_abort = false
-    save_func()
+    local current_time = os.date("%Y-%m-%d %H:%M:%S")
+    echo(current_time)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (cnf.opts.debounce_delay > 0) then
+        debounce(M.save, cnf.opts.debounce_delay)()
+    else
+        M.save()
+    end
 end
 
 function M.on()
@@ -139,7 +124,6 @@ function M.on()
         group = "AutoSave",
     })
 
-    callback("enabling")
     autosave_running = true
 end
 
@@ -148,7 +132,6 @@ function M.off()
         clear = true,
     })
 
-    callback("disabling")
     autosave_running = false
 end
 
