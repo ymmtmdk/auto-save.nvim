@@ -12,6 +12,7 @@ api.nvim_create_augroup("AutoSave", {
 })
 
 local global_vars = {}
+local queued = 0
 
 local function set_buf_var(buf, name, value)
     global_vars[name] = value
@@ -24,14 +25,15 @@ end
 local function debounce(lfn, duration)
     local function inner_debounce()
         local buf = api.nvim_get_current_buf()
-        local q = get_buf_var(buf, "queued")
-        if (not q) or (q == 0) then
-            vim.defer_fn(function()
-                set_buf_var(buf, "queued", 0)
+        vim.defer_fn(function()
+            if queued > 0 then
+                queued = queued - 1
+            end
+            if queued == 0 then
                 lfn(buf)
-            end, cnf.opts.debounce_delay)
-            set_buf_var(buf, "queued", 1)
-        end
+            end
+        end, cnf.opts.debounce_delay)
+        queued = queued + 1
     end
 
     return inner_debounce
