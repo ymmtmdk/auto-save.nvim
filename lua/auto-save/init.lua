@@ -3,26 +3,14 @@ local M = {}
 local cnf = require("auto-save.config")
 local autosave_running
 local api = vim.api
-local fn = vim.fn
-local cmd = vim.cmd
 local AUTO_SAVE_COLOR = "MsgArea"
+local queued = 0
 
 api.nvim_create_augroup("AutoSave", {
     clear = true,
 })
 
-local global_vars = {}
-local queued = 0
-
-local function set_buf_var(buf, name, value)
-    global_vars[name] = value
-end
-
-local function get_buf_var(buf, name)
-    return global_vars[name]
-end
-
-local function debounce(lfn, duration)
+local function debounce(lfn)
     local buf = api.nvim_get_current_buf()
     vim.defer_fn(function()
         if queued > 0 then
@@ -54,12 +42,9 @@ function M.save(buf)
         return
     end
 
-    if cnf.opts.write_all_buffers then
-        cmd("silent! wall")
-    else
-        api.nvim_buf_call(buf, function()
-            cmd("silent! write")
-        end)
+    local mode = vim.api.nvim_get_mode().mode
+    if not (mode == 'n') then
+        return
     end
 
     echo(
@@ -67,19 +52,11 @@ function M.save(buf)
         and cnf.opts.execution_message.message()
         or cnf.opts.execution_message.message
     )
-    if cnf.opts.execution_message.cleaning_interval > 0 then
-        fn.timer_start(cnf.opts.execution_message.cleaning_interval, function()
-            cmd([[echon '']])
-        end)
-    end
 end
 
 local function perform_save()
-    local current_time = os.date("%Y-%m-%d %H:%M:%S")
-    echo(current_time)
-
     if (cnf.opts.debounce_delay > 0) then
-        debounce(M.save, cnf.opts.debounce_delay)
+        debounce(M.save)
     else
         M.save()
     end
@@ -87,9 +64,7 @@ end
 
 function M.on()
     api.nvim_create_autocmd(cnf.opts.trigger_events, {
-        callback = function()
-            perform_save()
-        end,
+        callback = perform_save,
         pattern = "*",
         group = "AutoSave",
     })
