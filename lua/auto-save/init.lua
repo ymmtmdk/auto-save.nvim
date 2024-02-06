@@ -3,6 +3,7 @@ local M = {}
 local cnf = require("auto-save.config")
 local autosave_running
 local api = vim.api
+local cmd = vim.cmd
 local AUTO_SAVE_COLOR = "MsgArea"
 local queued = 0
 
@@ -44,8 +45,15 @@ function M.save(buf)
 
     local mode = vim.api.nvim_get_mode().mode
     if not (mode == 'n') then
+        -- return
+    end
+    if mode == 'i' or mode == 'ic' then
         return
     end
+
+    api.nvim_buf_call(buf, function()
+        cmd("silent! write")
+    end)
 
     echo(
         type(cnf.opts.execution_message.message) == "function"
