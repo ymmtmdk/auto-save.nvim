@@ -23,20 +23,16 @@ local function get_buf_var(buf, name)
 end
 
 local function debounce(lfn, duration)
-    local function inner_debounce()
-        local buf = api.nvim_get_current_buf()
-        vim.defer_fn(function()
-            if queued > 0 then
-                queued = queued - 1
-            end
-            if queued == 0 then
-                lfn(buf)
-            end
-        end, cnf.opts.debounce_delay)
-        queued = queued + 1
-    end
-
-    return inner_debounce
+    local buf = api.nvim_get_current_buf()
+    vim.defer_fn(function()
+        if queued > 0 then
+            queued = queued - 1
+        end
+        if queued == 0 then
+            lfn(buf)
+        end
+    end, cnf.opts.debounce_delay)
+    queued = queued + 1
 end
 
 local function echo(msg)
@@ -83,7 +79,7 @@ local function perform_save()
     echo(current_time)
 
     if (cnf.opts.debounce_delay > 0) then
-        debounce(M.save, cnf.opts.debounce_delay)()
+        debounce(M.save, cnf.opts.debounce_delay)
     else
         M.save()
     end
