@@ -2,17 +2,15 @@ local M = {}
 
 local cnf = require("auto-save.config")
 local autosave_running
-local api = vim.api
-local cmd = vim.cmd
 local AUTO_SAVE_COLOR = "MsgArea"
 local queued = 0
 
-api.nvim_create_augroup("AutoSave", {
+vim.api.nvim_create_augroup("AutoSave", {
     clear = true,
 })
 
 local function debounce(lfn)
-    local buf = api.nvim_get_current_buf()
+    local buf = vim.api.nvim_get_current_buf()
     vim.defer_fn(function()
         if queued > 0 then
             queued = queued - 1
@@ -24,9 +22,8 @@ local function debounce(lfn)
     queued = queued + 1
 end
 
-
 local function echo(msg)
-    api.nvim_echo(
+    vim.api.nvim_echo(
         { { (msg), AUTO_SAVE_COLOR, }, },
         true,
         {}
@@ -34,24 +31,23 @@ local function echo(msg)
 end
 
 local function condition(buf)
-    local fn = vim.fn
     local utils = require("auto-save.utils.data")
 
-    if fn.getbufvar(buf, "&modifiable") == 1 and
-        utils.not_in(fn.getbufvar(buf, "&filetype"), {}) then
-        return true -- met condition(s), can save
+    if vim.fn.getbufvar(buf, "&modifiable") == 1 and
+        utils.not_in(vim.fn.getbufvar(buf, "&filetype"), {}) then
+        return true
     end
-    return false    -- can't save
+    return false
 end
 
 function M.save(buf)
-    buf = buf or api.nvim_get_current_buf()
+    buf = buf or vim.api.nvim_get_current_buf()
 
     if condition(buf) == false then
         return
     end
 
-    if not api.nvim_buf_get_option(buf, "modified") then
+    if not vim.api.nvim_buf_get_option(buf, "modified") then
         return
     end
 
@@ -63,15 +59,9 @@ function M.save(buf)
         return
     end
 
-    api.nvim_buf_call(buf, function()
-        cmd("silent! write")
+    vim.api.nvim_buf_call(buf, function()
+        vim.cmd("silent! write")
     end)
-
-    echo(
-        type(cnf.opts.execution_message.message) == "function"
-        and cnf.opts.execution_message.message()
-        or cnf.opts.execution_message.message
-    )
 end
 
 local function perform_save()
@@ -83,7 +73,7 @@ local function perform_save()
 end
 
 function M.on()
-    api.nvim_create_autocmd(cnf.opts.trigger_events, {
+    vim.api.nvim_create_autocmd(cnf.opts.trigger_events, {
         callback = perform_save,
         pattern = "*",
         group = "AutoSave",
@@ -93,7 +83,7 @@ function M.on()
 end
 
 function M.off()
-    api.nvim_create_augroup("AutoSave", {
+    vim.api.nvim_create_augroup("AutoSave", {
         clear = true,
     })
 
