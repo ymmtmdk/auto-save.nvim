@@ -5,8 +5,7 @@
 
 ### 📦 Installation
 
-<details>
-	<summary><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a></summary>
+lazy.nvim
 
 ```lua
 {
@@ -19,8 +18,6 @@
   end
 }
 ```
-
-</details>
 
 ### ⚙️ Configuration
 
@@ -42,8 +39,6 @@ Additionally you may want to set up a key mapping to toggle auto-save:
 ```lua
 vim.api.nvim_set_keymap("n", "<leader>n", ":ASToggle<CR>", {})
 ```
-
-&nbsp;
 
 ### 🪴 Usage
 
