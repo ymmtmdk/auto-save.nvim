@@ -9,17 +9,9 @@ vim.api.nvim_create_augroup("AutoSave", {
   clear = true,
 })
 
-local function debounce(lfn)
-  local buf = vim.api.nvim_get_current_buf() vim.defer_fn(function()
-    if queued > 0 then
-      queued = queued - 1
-    end
-    if queued == 0 then
-      lfn(buf)
-    end
-  end, cnf.opts.debounce_delay)
-  queued = queued + 1
-end
+vim.api.nvim_create_augroup("AutoSavea", {
+  clear = true,
+})
 
 local function echo(msg)
   vim.api.nvim_echo(
@@ -27,6 +19,19 @@ local function echo(msg)
     true,
     {}
   )
+end
+
+local function debounce(lfn, delay)
+  local buf = vim.api.nvim_get_current_buf()
+  vim.defer_fn(function()
+    if queued > 0 then
+      queued = queued - 1
+    end
+    if queued == 0 then
+      lfn(buf)
+    end
+  end, delay)
+  queued = queued + 1
 end
 
 local function condition(buf)
@@ -39,12 +44,27 @@ local function condition(buf)
   return false
 end
 
-function M.save(buf)
+local function save(buf)
   buf = buf or vim.api.nvim_get_current_buf()
+  vim.print(buf)
 
+
+  vim.api.nvim_buf_call(buf, function()
+    if vim.g.vscode then
+      local vscode = require('vscode-neovim')
+      local r = vscode.call('workbench.action.files.save')
+      -- vim.print(r)
+    else
+      vim.cmd("write")
+    end
+  end)
+end
+
+local function save_handler(buf)
   if condition(buf) == false then
     return
   end
+
 
   if not vim.api.nvim_buf_get_option(buf, "modified") then
     if not vim.g.vscode then
@@ -60,30 +80,30 @@ function M.save(buf)
     return
   end
 
-  vim.api.nvim_buf_call(buf, function()
-    if vim.g.vscode then
-      local vscode = require('vscode-neovim')
-      local r = vscode.call('workbench.action.files.save')
-      -- vim.print(r)
-    else
-      vim.cmd("write")
-    end
-  end)
+  save(buf)
 end
 
-local function perform_save()
-  if (cnf.opts.debounce_delay > 0) then
-    debounce(M.save)
-  else
-    M.save()
-  end
+
+
+local function debounce_save()
+  debounce(save_handler, cnf.opts.debounce_delay)
+end
+
+local function immediate_save()
+  save()
 end
 
 function M.on()
-  vim.api.nvim_create_autocmd(cnf.opts.trigger_events, {
-    callback = perform_save,
+  vim.api.nvim_create_autocmd(cnf.opts.debounce_events, {
+    callback = debounce_save,
     pattern = "*",
     group = "AutoSave",
+  })
+
+  vim.api.nvim_create_autocmd(cnf.opts.immediate_events, {
+    callback = immediate_save,
+    pattern = "*",
+    group = "AutoSavea",
   })
 
   autosave_running = true
@@ -91,6 +111,10 @@ end
 
 function M.off()
   vim.api.nvim_create_augroup("AutoSave", {
+    clear = true,
+  })
+
+  vim.api.nvim_create_augroup("AutoSavea", {
     clear = true,
   })
 

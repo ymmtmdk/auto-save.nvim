@@ -1,8 +1,9 @@
 Config = {
   opts = {
-    enabled = true,                                                                         -- start auto-save when the plugin is loaded (i.e. when your package manager loads it)
-    trigger_events = { "InsertLeave", "TextChanged", "FocusLost", "TabLeave", "BufLeave" }, -- vim events that trigger auto-save. See :h events
-    debounce_delay = 500,                                                                   -- saves the file at most every `debounce_delay` milliseconds
+    enabled = true,                                                            -- start auto-save when the plugin is loaded (i.e. when your package manager loads it)
+    debounce_events = { "TextChanged" },                                       -- vim events that trigger auto-save. See :h events
+    debounce_delay = 2500,                                                     -- saves the file at most every `debounce_delay` milliseconds
+    immediate_events = { "InsertLeave", "FocusLost", "TabLeave", "BufLeave" }, -- vim events that trigger auto-save. See :h events
   },
 }
 
