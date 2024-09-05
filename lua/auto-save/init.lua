@@ -50,9 +50,6 @@ end
 
 local function save(buf)
   buf = buf or vim.api.nvim_get_current_buf()
-  vim.print(buf)
-
-
   vim.api.nvim_buf_call(buf, function()
     if vim.g.vscode then
       local vscode = require('vscode-neovim')
@@ -65,10 +62,10 @@ local function save(buf)
 end
 
 local function save_handler(buf)
+  buf = buf or vim.api.nvim_get_current_buf()
   if condition(buf) == false then
     return
   end
-
 
   if not vim.api.nvim_buf_get_option(buf, "modified") then
     if not vim.g.vscode then
@@ -86,8 +83,6 @@ local function save_handler(buf)
 
   save(buf)
 end
-
-
 
 local function debounce_save()
   debounce(save_handler, cnf.opts.debounce_delay)
