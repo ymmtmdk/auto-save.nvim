@@ -5,13 +5,17 @@ local autosave_running
 local AUTO_SAVE_COLOR = "MsgArea"
 local queued = 0
 
-vim.api.nvim_create_augroup("AutoSave", {
-  clear = true,
-})
+local function clear_augroup()
+  vim.api.nvim_create_augroup("AutoSave", {
+    clear = true,
+  })
 
-vim.api.nvim_create_augroup("AutoSavea", {
-  clear = true,
-})
+  vim.api.nvim_create_augroup("AutoSaveB", {
+    clear = true,
+  })
+end
+
+clear_augroup()
 
 local function echo(msg)
   vim.api.nvim_echo(
@@ -103,21 +107,14 @@ function M.on()
   vim.api.nvim_create_autocmd(cnf.opts.immediate_events, {
     callback = immediate_save,
     pattern = "*",
-    group = "AutoSavea",
+    group = "AutoSaveB",
   })
 
   autosave_running = true
 end
 
 function M.off()
-  vim.api.nvim_create_augroup("AutoSave", {
-    clear = true,
-  })
-
-  vim.api.nvim_create_augroup("AutoSavea", {
-    clear = true,
-  })
-
+  clear_augroup()
   autosave_running = false
 end
 
