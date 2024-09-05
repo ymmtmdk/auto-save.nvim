@@ -10,8 +10,7 @@ vim.api.nvim_create_augroup("AutoSave", {
 })
 
 local function debounce(lfn)
-  local buf = vim.api.nvim_get_current_buf()
-  vim.defer_fn(function()
+  local buf = vim.api.nvim_get_current_buf() vim.defer_fn(function()
     if queued > 0 then
       queued = queued - 1
     end
