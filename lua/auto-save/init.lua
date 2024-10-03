@@ -50,6 +50,11 @@ end
 
 local function save(buf)
   buf = buf or vim.api.nvim_get_current_buf()
+  if not vim.api.nvim_buf_get_option(buf, "modified") then
+    if not vim.g.vscode then
+      return
+    end
+  end
   vim.api.nvim_buf_call(buf, function()
     if vim.g.vscode then
       local vscode = require('vscode-neovim')
@@ -67,16 +72,11 @@ local function save_handler(buf)
     return
   end
 
-  if not vim.api.nvim_buf_get_option(buf, "modified") then
-    if not vim.g.vscode then
-      return
-    end
-  end
-
   local mode = vim.api.nvim_get_mode().mode
   if not (mode == 'n') then
     return
   end
+
   if mode == 'i' or mode == 'ic' then
     return
   end
